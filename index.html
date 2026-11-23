@@ -302,7 +302,7 @@ function list(){
  const yrs=[...new Set([today().slice(0,4),...S.orders.map(o=>(o.date||'').slice(0,4))].filter(Boolean))].sort().reverse();
  const os=S.orders.filter(o=>(!LM.y||(o.date||'').startsWith(LM.y))&&(!LM.m||(o.date||'').slice(5,7)===LM.m)).sort((a,b)=>a.date.localeCompare(b.date)||(a.no||'').localeCompare(b.no||''));
  $('#app').innerHTML=`<header><img class="logo" src="${LOGO}" alt="弘越"><h1>弘越隔熱紙</h1><button class="s" onclick="go('report')">月報</button><button class="s" onclick="go('films')">膜種價格</button></header>
- <main>${filterHtml(yrs,os)}${os.length?os.map((o,i)=>`<div class="card" onclick="open_('${o.id}')"><div class="mu"><b style="color:var(--ac);font-size:15px">#${i+1}</b>　${esc(o.date)}　　${esc(o.no)}${o.inv?'　　發票 '+esc(o.inv):''}</div><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:8px"><span><b style="font-size:17px">${esc(o.customer||'（未填客戶）')}</b>　<span class="mu">${esc(o.phone)}${o.lineId?'　LINE: '+esc(o.lineId):''}</span></span><b style="font-size:18px">${money(total(o))}</b></div><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px"><span class="mu">${esc(o.type)}　${esc(vehLabel(o))}　${esc(o.subject)}</span><span style="display:flex;gap:6px;flex:none"><button class="s" aria-label="匯出 PDF" onclick="quick('${o.id}','pdf',event)" style="min-height:36px;padding:4px 10px;font-size:12px;display:flex;align-items:center;gap:4px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>PDF</button><button class="s" aria-label="傳到 LINE" onclick="quick('${o.id}','line',event)" style="min-height:36px;padding:4px 10px;font-size:12px;display:flex;align-items:center;gap:4px;color:#06c755;border-color:#06c755"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.6 1.6 4.9 4.1 6.4-.2.8-.7 2.4-.8 2.8 0 .3.2.4.4.3.3-.1 3.2-2.100 4.200-2.800.7.100 1.400.2 2.100.2 5.500 0 10-3.600 10-8S17.500 3 12 3z"/></svg>LINE</button></span></div></div>`).join(''):'<p class="mu" style="text-align:center;margin-top:40px">還沒有工單，請點下方「新增工單」</p>'}</main>
+ <main>${filterHtml(yrs,os)}${os.length?os.map((o,i)=>`<div class="card" onclick="open_('${o.id}')"><div class="mu"><b style="color:var(--ac);font-size:15px">#${i+1}</b>　${esc(o.date)}　　${esc(o.no)}${o.inv?'　　發票 '+esc(o.inv):''}</div><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:8px"><span><b style="font-size:17px">${esc(o.customer||'（未填客戶）')}</b>　<span class="mu">${esc(o.phone)}${o.lineId?'　LINE: '+esc(o.lineId):''}</span></span><b style="font-size:18px">${money(total(o))}</b></div><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px"><span class="mu">${esc(o.type)}　${esc(vehLabel(o))}　${esc(o.subject)}</span><span style="display:flex;gap:6px;flex:none"><button class="s" aria-label="匯出 PDF" onclick="quick('${o.id}','pdf',event)" style="min-height:36px;padding:4px 10px;font-size:12px;display:flex;align-items:center;gap:4px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>PDF</button><button class="s" aria-label="傳到 LINE" onclick="quick('${o.id}','line',event)" style="min-height:36px;padding:4px 10px;font-size:12px;display:flex;align-items:center;gap:4px;color:#06c755;border-color:#06c755"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.6 1.6 4.9 4.1 6.4-.2.8-.7 2.4-.8 2.8 0 .3.2.4.4.3.3-.1 3.2-2.100 4.200-2.800.7.100 1.400.2 2.100.2 5.500 0 10-3.600 10-8S17.500 3 12 3z"/></svg>LINE</button></span></div></div>`).join(''):'<p class="mu" style="text-align:center;margin-top:40px">還沒有工單，請點下方「新增工單」</p>'}${backupHtml()}</main>
  <div class="bar"><button onclick="add()">＋ 新增工單</button></div>`;
 }
 function add(){cur=newOrder('汽車');isNew=true;go('edit')}
@@ -470,6 +470,28 @@ async function pdf(){
   await deliverPdf(p,`${o.no}_${o.customer||'未命名'}.pdf`);
  }catch(e){if(e.name!=='AbortError')alert('匯出失敗：'+((e&&e.message)||e)+'\n可改用 LINE / Email 傳送文字版')}
 }
+function backupHtml(){const t=S.lastBackup?'上次備份：'+S.lastBackup:'尚未備份過';
+ return `<div class="card"><b>資料備份</b><div class="mu" style="margin:4px 0 8px">${t}。工單只存在這支手機的瀏覽器裡，請定期備份。</div><div class="row"><button onclick="exportBk()">匯出備份</button><button class="s" onclick="document.getElementById('bkfile').click()">匯入備份</button></div><input id="bkfile" type="file" accept=".json,application/json" style="display:none" onchange="importBk(this)"></div>`}
+function exportBk(){
+ S.lastBackup=today();save();
+ const name='弘越工單備份_'+today().replace(/-/g,'')+'.json';
+ const blob=new Blob([JSON.stringify({app:'hongyue',v:1,at:new Date().toISOString(),S})],{type:'application/json'});
+ const f=new File([blob],name,{type:'application/json'});
+ try{if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:name}).catch(()=>{});list();return}}catch(e){}
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();list()}
+function importBk(inp){
+ const file=inp.files&&inp.files[0];if(!file)return;
+ const r=new FileReader();
+ r.onload=()=>{try{
+  const d=JSON.parse(r.result),B=d&&d.S;
+  if(!B||!Array.isArray(B.orders))throw new Error('不是弘越工單的備份檔');
+  if(!confirm('備份檔內有 '+B.orders.length+' 筆工單。匯入後會與目前的工單合併，編號相同的工單會以備份檔為準。要繼續嗎？'))return;
+  const m=new Map(S.orders.map(o=>[o.id,o]));B.orders.forEach(o=>m.set(o.id,o));S.orders=[...m.values()];
+  (B.films||[]).forEach(f=>{if(!S.films.some(x=>x.name===f.name))S.films.push(f)});
+  save();list();alert('已匯入，目前共 '+S.orders.length+' 筆工單')
+ }catch(e){alert('匯入失敗：'+e.message)}inp.value=''};
+ r.readAsText(file)}
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
 R();
 </script>
 </body>
