@@ -454,15 +454,26 @@ async function deliverPdf(p,name){
  const blob=p.output('blob'),f=new File([blob],name,{type:'application/pdf'});
  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==='AbortError')return}
  showPdfSheet(blob,f,name)}
+function genWno(){
+ const used=new Set(S.orders.map(o=>o.wno).filter(Boolean));
+ for(let k=0;k<50;k++){
+  const a=new Uint32Array(2);crypto.getRandomValues(a);
+  let n=String(a[0]).padStart(10,'0')+String(a[1]).padStart(10,'0');
+  n=String(1+(+n[0]%9))+n.slice(1,13);
+  if(!used.has(n))return n}
+ return String(Date.now()).padStart(13,'0').slice(-13)}
+function ensureWno(o){
+ if(!o.wno){o.wno=genWno();const i=S.orders.findIndex(x=>x.id===o.id);if(i>=0&&!S.orders[i].wno){S.orders[i].wno=o.wno;save()}}
+ return o.wno}
 async function pdf(){
  if(!window.html2canvas||!window.jspdf){alert('PDF 元件尚未載入，請檢查網路後再試');return}
  const o=cur,ws=o.windows.filter(w=>w.on);
- $('#sheet').innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px"><div style="display:flex;align-items:center;gap:14px"><img src="${LOGO}" style="height:72px"><h1 style="margin:0;font-size:26px;line-height:1.2;font-weight:700;letter-spacing:1px;white-space:nowrap">弘越隔熱紙 施工單</h1></div><img src="${SEAL}" style="height:104px;flex:none"></div>
+ $('#sheet').innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px"><div style="display:flex;align-items:center;gap:14px"><img src="${LOGO}" style="height:72px"><h1 style="margin:0;font-size:26px;line-height:1.2;font-weight:700;letter-spacing:1px;white-space:nowrap">弘越隔熱紙 施工單</h1></div></div>
  <div style="font-size:12px;line-height:1.6;color:#333"><div>客戶：${esc(o.customer)}　電話：${esc(o.phone)}${o.lineId?'　LINE ID：'+esc(o.lineId):''}</div><div>編號：${esc(o.no)}　日期：${esc(o.date)}${o.inv?'　發票：'+esc(o.inv):''}</div><div>${esc(o.type)}：${esc(vehLabel(o))} ${esc(o.subject)}</div></div>
  <table><tr><th>窗戶</th><th>貼紙</th><th>才數</th><th>單價</th><th>小計</th></tr>
  ${ws.map(w=>`<tr><td>${esc(w.name)}</td><td>${esc(w.film)} ${esc(w.model)} ${w.pct?esc(w.pct)+'%':''}</td><td>${esc(w.cai)}</td><td>${esc(w.price)}</td><td>${money(w.cai*w.price)}</td></tr>`).join('')}
  ${o.travel?`<tr><td colspan="4">交通費</td><td>${money(o.travel)}</td></tr>`:''}${o.removal?`<tr><td colspan="4">拆舊紙</td><td>${money(o.removal)}</td></tr>`:''}${o.extra?`<tr><td colspan="4">其他費用 / 工資</td><td>${money(o.extra)}</td></tr>`:''}
- <tr><th colspan="4">合計</th><th>${money(total(o))}</th></tr></table>${WARR[o.type]?`<p style="margin:10px 0 0;display:flex;align-items:baseline;gap:6px"><b>保固：<span style="color:#dc2626;font-size:30px;line-height:1">${WARR[o.type]} 年</span></b><span style="font-size:11px;color:#555">（自 ${esc(o.date)} 起算）</span></p>`:''}${o.note?`<p>備註：${esc(o.note)}</p>`:''}`;
+ <tr><th colspan="4">合計</th><th>${money(total(o))}</th></tr></table><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-top:14px"><div style="flex:1;min-width:0">${WARR[o.type]?`<div style="display:flex;align-items:baseline;gap:6px;font-size:15px"><b>保固：<span style="color:#dc2626;font-size:21px">${WARR[o.type]} 年</span></b><span style="font-size:11px;color:#555">（自 ${esc(o.date)} 起算）</span></div><div style="margin-top:6px;font-size:12px;color:#555">保固號碼</div><div style="font-size:22px;font-weight:700;letter-spacing:3px;color:#b8860b;font-variant-numeric:tabular-nums">${ensureWno(o)}</div>`:''}${o.note?`<p style="margin:10px 0 0">備註：${esc(o.note)}</p>`:''}</div><img src="${SEAL}" style="height:110px;flex:none"></div>`;
  try{
   const c=await h2c();
   const p=new jspdf.jsPDF('p','mm','a4');
