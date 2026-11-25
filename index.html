@@ -420,12 +420,12 @@ function setLM(k,v){LM[k]=v;list()}
 function quick(id,k,ev){ev.stopPropagation();const o=S.orders.find(x=>x.id===id);if(!o)return;cur=JSON.parse(JSON.stringify(o));if(k==='pdf')pdf();else txt(k)}
 let SQ='';
 const nq=v=>String(v||'').toLowerCase().replace(/[\s\-－_]/g,'');
-function matchQ(o){const q=nq(SQ);return !q||[o.company,o.subject,o.lineId].some(v=>nq(v).includes(q))}
+function matchQ(o){const q=nq(SQ);return !q||[o.company,o.subject,o.lineId,o.customer,o.phone].some(v=>nq(v).includes(q))}
 function doSearch(){SQ=(document.getElementById('sq').value||'').trim();list()}
 function clearSearch(){SQ='';list()}
 function filterHtml(yrs,os){
  const tot=money(os.reduce((a,o)=>a+total(o),0));
- const sb=`<div class="card"><div class="row"><input id="sq" type="text" enterkeyhint="search" placeholder="搜尋：公司名／車牌／LINE ID" value="${esc(SQ)}" onkeydown="if(event.key==='Enter'){doSearch()}" autocapitalize="off" autocorrect="off" spellcheck="false" style="flex:3"><button onclick="doSearch()" style="flex:1">搜尋</button></div>${SQ?`<button class="s" style="width:100%;margin-top:8px" onclick="clearSearch()">清除搜尋，回到月份列表</button>`:''}</div>`;
+ const sb=`<div class="card"><div class="row"><input id="sq" type="text" enterkeyhint="search" placeholder="搜尋：姓名／電話／公司／車牌／LINE" value="${esc(SQ)}" onkeydown="if(event.key==='Enter'){doSearch()}" autocapitalize="off" autocorrect="off" spellcheck="false" style="flex:3"><button onclick="doSearch()" style="flex:1">搜尋</button></div>${SQ?`<button class="s" style="width:100%;margin-top:8px" onclick="clearSearch()">清除搜尋，回到月份列表</button>`:''}</div>`;
  if(SQ)return sb+`<div class="card"><div>搜尋「${esc(SQ)}」的結果（不受年月限制）</div><div class="mu" style="margin-top:4px">共 ${os.length} 筆　合計 ${tot}</div></div>`;
  return sb+`<div class="card"><div class="row"><select onchange="setLM('y',this.value)"><option value="">全部年份</option>${yrs.map(y=>`<option ${y===LM.y?'selected':''}>${y}</option>`).join('')}</select><select onchange="setLM('m',this.value)"><option value="">全年</option>${Array.from({length:12},(_,k)=>{const m=String(k+1).padStart(2,'0');return `<option value="${m}" ${m===LM.m?'selected':''}>${k+1} 月</option>`}).join('')}</select></div><div class="mu" style="margin-top:8px">共 ${os.length} 筆（1–${os.length}）　合計 ${tot}</div></div>`}
 function films(){
